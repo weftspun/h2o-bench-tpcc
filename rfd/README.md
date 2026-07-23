@@ -1,8 +1,7 @@
-# Scaling RFDs
+# RFDs
 
-Request-for-Discussion-style documents (format inspired by
-[Oxide Computer Company's RFD process](https://rfd.shared.oxide.computer/))
-documenting architectural decisions and scaling specifications.
+Request-for-Discussion documents (format inspired by
+[Oxide Computer Company's RFD process](https://rfd.shared.oxide.computer/)).
 
 | RFD | Title | State |
 |-----|-------|-------|
@@ -11,6 +10,7 @@ documenting architectural decisions and scaling specifications.
 | [0003](0003-assetcdn-scaling.md) | assetcdn scaling | discussion |
 | [0004](0004-cassie-scaling.md) | cassie scaling | discussion |
 | [0005](0005-actor-lite-architecture.md) | Actor-lite worker pool architecture | discussion |
-| [0006](0006-cockroachdb-selection.md) | CockroachDB selection over FRL/FDB | accepted |
+| [0006](0006-fdb-selection.md) | FoundationDB selection over CockroachDB | accepted |
 | [0007](0007-h2o-tfb-reuse.md) | h2o TFB reference implementation reuse | accepted |
 | [0008](0008-verification-strategy.md) | Three-layer verification strategy | accepted |
+| [0009](0009-fdb-keyspace-design.md) | TPC-C keyspace design for FDB | discussion |
