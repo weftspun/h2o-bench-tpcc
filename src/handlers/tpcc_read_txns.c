@@ -170,7 +170,7 @@ static void sl_on_range_read(FDBFuture *future, void *arg)
     const FDBKeyValue *kvs;
     int count;
     fdb_bool_t more;
-    err = fdb_future_get_keyvalue_array(future, &kvs, &count);
+    err = fdb_future_get_keyvalue_array(future, &kvs, &count, &more);
 
     int32_t below_threshold = 0;
     for (int i = 0; i < count; i++) {
