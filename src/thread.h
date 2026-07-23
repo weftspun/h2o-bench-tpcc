@@ -6,11 +6,6 @@
 
 #include "global_data.h"
 
-typedef struct {
-    config_t *config;
-    request_handler_data_t request_handler_data;
-} global_thread_data_t;
-
 int init_fdb_global(config_t *config, size_t num_threads);
 void cleanup_fdb_global(void);
 

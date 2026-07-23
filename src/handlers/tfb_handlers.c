@@ -26,9 +26,13 @@
 #include "error.h"
 #include "utility.h"
 
-/* Per-handler FDB state (shared across all TFB handlers) */
+/* Per-handler FDB state (set during initialize_tfb_handlers at bottom of file) */
 static fdb_thread_state_t *g_fdb_state;
 static unsigned int *g_seed;
+
+/* In-memory World cache for /cached-worlds (populated lazily) */
+static uint16_t g_world_cache[10001];
+static bool g_world_cache_loaded = false;
 
 /* --- World helpers --- */
 
@@ -475,6 +479,15 @@ void initialize_tfb_handlers(h2o_hostconf_t *hostconf,
 {
     g_fdb_state = fdb_state;
     g_seed = seed;
+
+    /* Pre-populate the world cache with random data so /cached-worlds
+     * works even before FDB is loaded */
+    if (!g_world_cache_loaded) {
+        unsigned int s = 42;
+        for (int i = 0; i <= 10000; i++)
+            g_world_cache[i] = (uint16_t)(rand_r(&s) % 10000);
+        g_world_cache_loaded = true;
+    }
 
     h2o_pathconf_t *pathconf;
 

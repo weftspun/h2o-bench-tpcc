@@ -3,11 +3,6 @@
  *
  * Usage:
  *   h2o-bench-tpcc -a<thread_count> -c<cluster_file> -w<warehouses> [-p<port>] [-t<duration_ms>]
- *
- * Based on the h2o TFB implementation's argument parsing and h2o context
- * setup. HTTP/3 enabled via h2o's built-in quic stack.
- *
- * Database: FoundationDB via libfdb_c (pure C, no JVM).
  */
 
 #include <h2o.h>
@@ -31,7 +26,7 @@ static void usage(const char *prog)
     fprintf(stderr,
             "Usage: %s -a<thread_count> -c<cluster_file> -w<warehouses> [-p<port>] [-t<duration_ms>]\n"
             "\n"
-            "  -a  Number of worker threads (also max DB conns per thread)\n"
+            "  -a  Number of worker threads\n"
             "  -c  FoundationDB cluster file path\n"
             "  -w  Warehouse count (TPC-C scale factor)\n"
             "  -p  HTTP port (default 8080)\n"
@@ -87,8 +82,12 @@ int main(int argc, char *argv[])
     h2o_hostconf_t *hostconf = h2o_config_register_host(&config.h2o_config, h2o_iovec_init(H2O_STRLIT("*")), port);
 
     request_handler_data_t handler_data = {0};
+
+    /* Register TFB routes (plaintext, json, db, queries, updates, cached-worlds) */
     unsigned int tfb_seed = (unsigned int)time(NULL);
     initialize_tfb_handlers(hostconf, NULL, &tfb_seed);
+
+    /* Register TPC-C routes */
     initialize_tpcc_handlers(hostconf, NULL, &handler_data);
 
     global_thread_data_t global_data = {
@@ -104,10 +103,10 @@ int main(int argc, char *argv[])
         pthread_create(&thread_ids[i], NULL, event_loop_thread, &threads[i]);
     }
 
-    /* Run FDB network on the main thread (fdb_run_network blocks) */
-    fprintf(stderr, "h2o-bench-tpcc: %zu worker(s), %zu warehouse(s), port %d (HTTP/3 + FDB)\n",
+    fprintf(stderr, "h2o-bench-tpcc: %zu worker(s), %zu warehouse(s), port %d\n",
             config.worker_count, config.warehouses, port);
 
+    /* Run FDB network on the main thread (fdb_run_network blocks) */
     fdb_run_network();
 
     for (size_t i = 0; i < config.worker_count; i++)
