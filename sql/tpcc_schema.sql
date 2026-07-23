@@ -1,0 +1,6 @@
+-- TPC-C SQL schema (reference for cross-DB comparison)
+-- 
+-- h2o-bench-tpcc uses FoundationDB (raw key-value), not SQL.
+-- This schema is kept for reference and for a future CockroachDB adapter.
+-- See rfd/0009-fdb-keyspace-design.md for the FDB keyspace mapping.
+--

@@ -40,7 +40,7 @@ H2O network thread (event loop, HTTP/3)
 H2O network thread (send HTTP response)
     │
     ▼
-CockroachDB (Postgres wire protocol, port 26257)
+FoundationDB (libfdb_c, pure C, no JVM)
 ```
 
 ## Three components
@@ -84,6 +84,8 @@ HTTP response. No shared state on the return path.
 
 - No scheduler overhead — each worker is a bare pthread
 - No lock contention — SPSC rings have zero cross-thread writes on the fast path
-- libpq pipeline mode batches multiple SQL statements per network round-trip
+- FDB async callbacks chain transaction steps without blocking
+- FDB transactions are native ACID (no SQL BEGIN/COMMIT overhead)
+- libfdb_c is pure C — no JVM, no JNI, no SQL parser
 - h2o's event loop handles HTTP/3 natively (no separate QUIC stack)
 - Top 10 is exclusively Rust and C/C++ — no managed runtime in the top 10

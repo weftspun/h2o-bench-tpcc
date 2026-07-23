@@ -32,6 +32,13 @@ Anton Valentinov Kirilov (MIT license).
 - mustache-c templates
 - The World/Fortune/Plaintext/JSON handlers (replaced with TPC-C handlers)
 
+## What was replaced
+
+- `database.c` (libpq async pipeline pool) -> `fdb_database.c` (FDB C API,
+  `fdb_future_set_callback` for async). The callback model maps to the
+  same `on_result`/`on_error`/`on_timeout` pattern but via FDB futures
+  instead of libpq pipeline results.
+
 ## What was added
 
 - SPSC lock-free ring buffer (`spsc_ring.c`) for worker dispatch
