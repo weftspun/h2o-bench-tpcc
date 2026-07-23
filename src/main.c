@@ -2,10 +2,12 @@
  * h2o-bench-tpcc main entry point.
  *
  * Usage:
- *   h2o-bench-tpcc -a<thread_count> -d<conninfo> -w<warehouses> [-p<port>] [-t<duration_ms>]
+ *   h2o-bench-tpcc -a<thread_count> -c<cluster_file> -w<warehouses> [-p<port>] [-t<duration_ms>]
  *
  * Based on the h2o TFB implementation's argument parsing and h2o context
- * setup. HTTP/3 enabled via h2o's built-in quic stack (same as weft-warp-loop).
+ * setup. HTTP/3 enabled via h2o's built-in quic stack.
+ *
+ * Database: FoundationDB via libfdb_c (pure C, no JVM).
  */
 
 #include <h2o.h>
@@ -18,7 +20,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "database.h"
 #include "error.h"
 #include "global_data.h"
 #include "thread.h"
@@ -27,10 +28,10 @@
 static void usage(const char *prog)
 {
     fprintf(stderr,
-            "Usage: %s -a<thread_count> -d<conninfo> -w<warehouses> [-p<port>] [-t<duration_ms>]\n"
+            "Usage: %s -a<thread_count> -c<cluster_file> -w<warehouses> [-p<port>] [-t<duration_ms>]\n"
             "\n"
             "  -a  Number of worker threads (also max DB conns per thread)\n"
-            "  -d  libpq connection string (e.g. dbname=tpcc host=localhost port=26257)\n"
+            "  -c  FoundationDB cluster file path\n"
             "  -w  Warehouse count (TPC-C scale factor)\n"
             "  -p  HTTP port (default 8080)\n"
             "  -t  Benchmark duration in ms (default 0 = run until killed)\n",
@@ -40,26 +41,20 @@ static void usage(const char *prog)
 int main(int argc, char *argv[])
 {
     config_t config = {0};
-    config.db_host = "localhost";
+    config.fdb_cluster_file = "/etc/foundationdb/fdb.cluster";
     config.warehouses = 1;
     config.worker_count = 1;
     config.duration_ms = 0;
-    config.db_config.max_db_conn_num = 1;
-    config.db_config.max_pipeline_query_num = 8;
-    config.db_config.max_query_num = config.db_config.max_db_conn_num * config.db_config.max_pipeline_query_num;
-    config.db_config.db_timeout = 30;
     int port = DEFAULT_PORT;
 
     int opt;
-    while ((opt = getopt(argc, argv, "a:d:w:p:t:h")) != -1) {
+    while ((opt = getopt(argc, argv, "a:c:w:p:t:h")) != -1) {
         switch (opt) {
         case 'a':
             config.worker_count = (size_t)atoi(optarg);
-            config.db_config.max_db_conn_num = config.worker_count;
-            config.db_config.max_query_num = config.db_config.max_db_conn_num * config.db_config.max_pipeline_query_num;
             break;
-        case 'd':
-            config.db_conninfo = optarg;
+        case 'c':
+            config.fdb_cluster_file = optarg;
             break;
         case 'w':
             config.warehouses = (size_t)atoi(optarg);
@@ -77,14 +72,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!config.db_conninfo) {
-        config.db_conninfo = "dbname=tpcc host=tfb-database port=26257 sslmode=disable user=benchmarkdbuser";
-    }
-
     signal(SIGPIPE, SIG_IGN);
 
+    /* Initialize FDB network before starting threads */
+    if (init_fdb_global(&config, config.worker_count)) {
+        fprintf(stderr, "Failed to initialize FoundationDB\n");
+        return 1;
+    }
+
     h2o_config_init(&config.h2o_config);
-    /* HTTP/3 support — same quic stack as weft-warp-loop */
     config.h2o_config.http3.enabled = 1;
     config.h2o_config.http3.max_concurrent_streams = 256;
     h2o_hostconf_t *hostconf = h2o_config_register_host(&config.h2o_config, h2o_iovec_init(H2O_STRLIT("*")), port);
@@ -105,8 +101,11 @@ int main(int argc, char *argv[])
         pthread_create(&thread_ids[i], NULL, event_loop_thread, &threads[i]);
     }
 
-    fprintf(stderr, "h2o-bench-tpcc: %zu worker(s), %zu warehouse(s), port %d (HTTP/3 enabled)\n",
+    /* Run FDB network on the main thread (fdb_run_network blocks) */
+    fprintf(stderr, "h2o-bench-tpcc: %zu worker(s), %zu warehouse(s), port %d (HTTP/3 + FDB)\n",
             config.worker_count, config.warehouses, port);
+
+    fdb_run_network();
 
     for (size_t i = 0; i < config.worker_count; i++)
         pthread_join(thread_ids[i], NULL);
@@ -117,6 +116,7 @@ int main(int argc, char *argv[])
     free(threads);
     free(thread_ids);
     cleanup_tpcc_handlers(&handler_data);
+    cleanup_fdb_global();
 
     return 0;
 }
