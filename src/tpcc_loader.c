@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 #include <arpa/inet.h>
 
 #define FDB_API_VERSION 730
@@ -243,6 +244,10 @@ int main(int argc, char *argv[])
     check_fdb(fdb_select_api_version_impl(FDB_API_VERSION, FDB_API_VERSION), "select_api_version");
     check_fdb(fdb_setup_network(), "setup_network");
 
+    /* Spawn FDB network thread */
+    pthread_t fdb_thread;
+    pthread_create(&fdb_thread, NULL, (void *(*)(void *))fdb_run_network, NULL);
+
     /* FDB API 730: fdb_create_database returns fdb_error_t directly */
     FDBDatabase *db;
     fdb_error_t db_err = fdb_create_database(cluster_file, &db);
@@ -258,6 +263,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "TPC-C data load complete.\n");
 
     fdb_database_destroy(db);
+    pthread_join(fdb_thread, NULL);
     check_fdb(fdb_stop_network(), "stop_network");
 
     return 0;
