@@ -1,0 +1,24 @@
+[default]
+db_url = "fdb://tfb-database:4500"
+approach = "Realistic"
+classification = "Platform"
+database = "foundationdb"
+framework = "libh2o"
+language = "C"
+flavor = "None"
+orm = "Raw"
+platform = "None"
+webserver = "h2o"
+os = "Linux"
+database_os = "Linux"
+display_name = "h2o-bench-tpcc"
+port = 8080
+notes = "TPC-C benchmark on FoundationDB via libfdb_c"
+
+[default.tests]
+new_order_url = "/tpcc/new-order"
+payment_url = "/tpcc/payment"
+order_status_url = "/tpcc/order-status"
+delivery_url = "/tpcc/delivery"
+stock_level_url = "/tpcc/stock-level"
+harness_url = "/tpcc/run"
