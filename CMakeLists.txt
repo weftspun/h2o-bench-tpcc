@@ -29,6 +29,7 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O3")
 
 file(GLOB_RECURSE HANDLER_SOURCES "src/handlers/*.c")
 file(GLOB SOURCES "src/*.c")
+list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/src/tpcc_loader.c")
 
 add_executable(${PROJECT_NAME} ${HANDLER_SOURCES} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${COMMON_OPTIONS})
