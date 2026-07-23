@@ -243,12 +243,10 @@ int main(int argc, char *argv[])
     check_fdb(fdb_select_api_version_impl(FDB_API_VERSION, FDB_API_VERSION), "select_api_version");
     check_fdb(fdb_setup_network(), "setup_network");
 
-    /* FDB API 730: use fdb_create_database directly */
-    FDBFuture *db_future = fdb_create_database(cluster_file);
-    check_fdb(fdb_future_block_until_ready(db_future), "db ready");
+    /* FDB API 730: fdb_create_database returns fdb_error_t directly */
     FDBDatabase *db;
-    check_fdb(fdb_future_get_database(db_future, &db), "get_database");
-    fdb_future_destroy(db_future);
+    fdb_error_t db_err = fdb_create_database(cluster_file, &db);
+    check_fdb(db_err, "create_database");
 
     /* Load data */
     load_items(db);

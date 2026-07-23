@@ -35,8 +35,9 @@ static void on_return_message(h2o_multithread_receiver_t *receiver,
                               h2o_linklist_t *messages)
 {
     while (!h2o_linklist_is_empty(messages)) {
-        return_message_t *msg = (return_message_t *)
-            h2o_linklist_pop(messages);
+        h2o_linklist_t *node = messages->next;
+        h2o_linklist_unlink(node);
+        return_message_t *msg = (return_message_t *)node;
         if (msg->status_code == 200)
             h2o_send_inline(msg->req, msg->body, (size_t)msg->body_len);
         else

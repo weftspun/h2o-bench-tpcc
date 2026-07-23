@@ -44,27 +44,12 @@ int fdb_thread_init(fdb_global_t *fdb, h2o_loop_t *loop, fdb_thread_state_t *sta
     memset(state, 0, sizeof(*state));
     state->loop = loop;
 
-    /* FDB API 730: use fdb_create_database directly (no cluster API) */
-    FDBFuture *db_future = fdb_create_database(fdb->cluster_file);
-    if (!db_future) {
-        ERROR("fdb_create_database failed");
-        return -1;
+    /* FDB API 730: fdb_create_database returns fdb_error_t directly */
+    fdb_error_t db_err = fdb_create_database(fdb->cluster_file, &state->db);
+    if (db_err) {
+        LIBRARY_ERROR("fdb_create_database", fdb_get_error(db_err));
+        return db_err;
     }
-
-    fdb_error_t err = fdb_future_block_until_ready(db_future);
-    if (err) {
-        LIBRARY_ERROR("fdb_future_block_until_ready", fdb_get_error(err));
-        fdb_future_destroy(db_future);
-        return err;
-    }
-
-    err = fdb_future_get_database(db_future, &state->db);
-    if (err) {
-        LIBRARY_ERROR("fdb_future_get_database", fdb_get_error(err));
-        fdb_future_destroy(db_future);
-        return err;
-    }
-    fdb_future_destroy(db_future);
 
     return 0;
 }
@@ -124,7 +109,7 @@ int fdb_async_get(fdb_thread_state_t *state, FDBTransaction *tr,
                   void (*cb)(FDBFuture *, void *), void *ctx)
 {
     (void)state;
-    FDBFuture *future = fdb_transaction_get(tr, key, key_len);
+    FDBFuture *future = fdb_transaction_get(tr, key, key_len, 0);
     if (!future) {
         ERROR("fdb_transaction_get failed");
         return -1;
@@ -148,7 +133,7 @@ int fdb_async_get_range(fdb_thread_state_t *state, FDBTransaction *tr,
     FDBFuture *future = fdb_transaction_get_range(tr,
         begin, begin_len, 0, 0,
         end, end_len, 0, 0,
-        0, 0, FDB_STREAMING_MODE_WANT_ALL, NULL, 0, 0);
+        0, 0, FDB_STREAMING_MODE_WANT_ALL, 0, 0, 0);
     if (!future) {
         ERROR("fdb_transaction_get_range failed");
         return -1;
