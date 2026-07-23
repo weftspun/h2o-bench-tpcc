@@ -165,3 +165,113 @@ Expected: O(1) per query, independent of zone count.
    core processes independent zones. No cross-zone conflicts (entities
    belong to exactly one zone). This should give near-linear core
    scaling, unlike TPC-C where district-level conflicts cause retries.
+
+## Bridge to mas-bandwidth/fps
+
+Glenn Fiedler's ["Creating a first person shooter that scales to
+millions of players"](https://mas-bandwidth.com/creating-a-first-person-shooter-that-scales-to-millions-of-players/)
+proposes a three-layer architecture: player servers, world servers, and
+a "world database" (Redis-like, async, in-memory). He explicitly states:
+*"somebody just needs to make this world database"* and *"creating this
+world database would be a fantastic open source project."*
+
+Zonefabric IS that world database, implemented on FDB instead of Redis.
+
+### Concept mapping
+
+| mas-bandwidth/fps concept | Zonefabric implementation | Why FDB |
+|---|---|---|
+| **World database** (Redis-like, async) | FDB as the world database | ACID transactions, range scans, durability |
+| **World server grid** (10km × 10km, 1km² cells) | ZONE rows with entity subspace per zone | FDB key prefix = spatial partition |
+| **Player state history** (100 bytes × 100Hz × 10K players = 100MB) | ENTITY rows with x, y, vx, vy, rtt_ms | FDB range scan returns packed structs |
+| **"Raycast and find first hit"** | CastSpell with GHOST_RANGE scan | FDB range read over entity positions |
+| **"Find players in volume"** | GhostRelevance spatial range query | FDB range scan filtered by ghost range |
+| **"Apply damage to entity"** | CastSpell fanout_target insert | FDB transactional write |
+| **Shallow state** (100 bytes, interpolation) | entity_t packed struct (~40 bytes) | Binary value encoding (RFD 0010) |
+| **Deep state** (1000 bytes, prediction/rollback) | Not modeled (future: add history ring) | FDB version stamps for MVCC history |
+| **Async calls** (goroutine per player, blocking on world DB) | H2O event loop + FDB async callbacks | fdb_future_set_callback (RFD 0011) |
+| **Input-driven simulation** (no global tick) | ZoneTick is per-zone, on-demand | Each zone is an independent FDB transaction |
+| **XDP kernel bypass** (10G NIC, 50K players/server) | H2O HTTP/TCP (not UDP/XDP) | HTTP is the benchmark transport; XDP is production transport |
+| **O(N²) snapshot delivery** | AOI-filtered (GHOST_RANGE=150.0 in 10000.0 world) | 0.02% of world space per zone — not full-mesh |
+| **Static geometry, no player collision** | Entities have position+velocity only | No physics engine — pure data operations |
+| **8K-50K players per 32-CPU server** | Benchmark target: zones per core | FDB scales linearly with cores |
+
+### What mas-bandwidth/fps has that zonefabric does not (yet)
+
+1. **UDP/XDP transport.** Glenn uses XDP kernel bypass for raw packet
+   throughput. We use HTTP/TCP via H2O. XDP is a production transport
+   optimization — the benchmark measures the world database layer, not
+   the packet processing layer. Adding a UDP/XDP transport is a future
+   deployment concern, not a benchmark concern.
+
+2. **Client-side prediction + rollback.** Glenn's deep state (1000 bytes)
+   includes prediction history for lag compensation. Zonefabric's
+   entity_t is shallow (position + velocity). FDB's MVCC version stamps
+   could provide history, but this is not modeled in the current schema.
+
+3. **Delta compression.** Glenn assumes 10x bandwidth reduction via delta
+   compression against a baseline. Zonefabric measures raw FDB
+   throughput — compression is a transport-layer concern.
+
+4. **Real-time multicast.** Glenn identifies O(N²) snapshot delivery as
+   the binding constraint. Zonefabric avoids this via AOI filtering
+   (GHOST_RANGE), but does not model the snapshot delivery path.
+
+### What zonefabric adds beyond mas-bandwidth/fps
+
+1. **Measured, not estimated.** Glenn's numbers are back-of-the-envelope
+   ("100MB for history", "1Gbit/sec for state"). Zonefabric produces
+   actual measured throughput via wrk against FDB.
+
+2. **ACID guarantees.** Glenn's "world database" is conceptual (Redis-
+   like). FDB provides strict serializable ACID transactions —
+   CastSpell's effect + fanout inserts are atomic. No partial writes
+   on failure.
+
+3. **Spatial range queries.** Glenn's world database is key-value with
+   "raycast" primitives. FDB's ordered key space enables native range
+   scans — finding all entities within GHOST_RANGE is a single range
+   read, not a custom spatial index.
+
+4. **Zone split cost model.** Zonefabric models SPLIT_COST_THRESHOLD
+   (population² > 40000 → split). mas-bandwidth/fps assumes static
+   grid cells. Zonefabric measures the cost of dynamic zone splitting.
+
+5. **Core-scaling measurement.** mas-bandwidth/fps estimates 8K-50K
+   players per 32-CPU server. Zonefabric measures actual zone tick
+   throughput per core, providing ground truth for capacity planning.
+
+### The path from utopia to here
+
+```
+mas-bandwidth/fps (concept)          zonefabric (measurement)
+┌──────────────────────┐            ┌──────────────────────┐
+│ Player servers       │            │ (not modeled —       │
+│ (XDP, 50K players)   │            │  HTTP/wrk is the     │
+│                      │            │  load generator)     │
+│ World servers        │── maps to──│ ZONE + ENTITY tables │
+│ (10km grid, 1km²)    │            │ (FDB range scans)     │
+│                      │            │                      │
+│ World database       │── maps to──│ FoundationDB         │
+│ (Redis-like, async)  │            │ (ACID, range scans)  │
+│                      │            │                      │
+│ "Raycast, find in    │── maps to──│ CastSpell,           │
+│  volume, apply dmg"  │            │ GhostRelevance       │
+│                      │            │                      │
+│ O(N²) snapshots      │── avoided──│ AOI (GHOST_RANGE)    │
+│                      │            │ 0.02% world coverage │
+└──────────────────────┘            └──────────────────────┘
+```
+
+Glenn's architecture is the target state. Zonefabric is the
+benchmark that proves whether FDB can serve as the world database
+that makes that architecture possible. The gap between "utopia" and
+"what we have" is:
+
+- **Transport**: HTTP/TCP (benchmark) → UDP/XDP (production)
+- **State depth**: shallow only → add prediction history
+- **Scale**: zones per core → players per server (add player server layer)
+- **Delivery**: request/response → snapshot multicast (add world server layer)
+
+Each gap is a future RFD. The world database layer — the hardest part —
+is what zonefabric benchmarks today.
