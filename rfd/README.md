@@ -23,3 +23,4 @@ Request-for-Discussion documents (format inspired by
 | [0016](0016-zstd-compression.md) | zstd compression for FDB values | discussion |
 | [0017](0017-slotmap-entity-storage.md) | slotmap entity storage | discussion |
 | [0018](0018-macaroon-xdp-security.md) | Macaroon + eBPF/XDP security fabric | discussion |
+| [0019](0019-feature-ablation.md) | plausible-witness-dag for MMO feature ablation | discussion |
