@@ -27,7 +27,6 @@ RUN echo "[timing] Building h2o-bench-tpcc: $(date)"
 WORKDIR /tmp/build
 COPY CMakeLists.txt ../
 COPY src ../src/
-COPY sql ../sql/
 RUN cmake -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_C_FLAGS="-march=native -mtune=native" \
       -DCMAKE_INSTALL_PREFIX=/opt/h2o-bench-tpcc -S .. && \

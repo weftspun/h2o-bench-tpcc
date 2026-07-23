@@ -35,7 +35,6 @@ target_link_libraries(${PROJECT_NAME} ${COMMON_OPTIONS})
 target_link_libraries(${PROJECT_NAME} ${H2O_LIB} ${FDB_C_LIB} ${SSL_LIB} ${CRYPTO_LIB} ${YAJL_LIB} ${Z_LIB} m)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-install(DIRECTORY sql DESTINATION share/${PROJECT_NAME})
 
 # TPC-C data loader
 add_executable(tpcc_loader src/tpcc_loader.c src/tpcc_kv.c)
