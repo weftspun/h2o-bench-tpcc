@@ -25,3 +25,4 @@ Request-for-Discussion documents (format inspired by
 | [0018](0018-macaroon-xdp-security.md) | Macaroon + eBPF/XDP security fabric | discussion |
 | [0019](0019-feature-ablation.md) | plausible-witness-dag for MMO feature ablation | discussion |
 | [0020](0020-pert-critical-path.md) | PERT critical path for zonefabric implementation | discussion |
+| [0021](0021-cruciblebench-ablation.md) | CrucibleBench MUD ablation with taskweft RECTGTN planner | discussion |

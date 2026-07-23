@@ -1,0 +1,308 @@
+{
+  "@context": {
+    "vsekai": "https://v-sekai.org/",
+    "domain": "vsekai:planning/domain/"
+  },
+  "@type": "domain:Definition",
+  "name": "cruciblebench_ablation",
+
+  "variables": [
+    {
+      "name": "world_state",
+      "type": "ref",
+      "init": {
+        "rooms": "not_built",
+        "exits": "not_built",
+        "items": "not_built",
+        "npcs": "not_built",
+        "dialogue": "not_built",
+        "trust": "not_built",
+        "factions": "not_built",
+        "secret_identity": "not_built",
+        "scoring": "not_built",
+        "persistence": "not_built",
+        "web_ui": "not_built",
+        "multiplayer": "not_built",
+        "llm_judge": "not_built"
+      }
+    },
+    {
+      "name": "playable",
+      "type": "bool",
+      "init": { "result": false }
+    },
+    {
+      "name": "winnable",
+      "type": "bool",
+      "init": { "result": false }
+    },
+    {
+      "name": "persistent",
+      "type": "bool",
+      "init": { "result": false }
+    },
+    {
+      "name": "multiplayer_ready",
+      "type": "bool",
+      "init": { "result": false }
+    },
+    {
+      "name": "cost",
+      "type": "float",
+      "init": { "total": 0.0 }
+    },
+    {
+      "name": "speculator_debt",
+      "type": "bool",
+      "init": { "has_debt": false }
+    }
+  ],
+
+  "capabilities": {
+    "entities": {
+      "builder": ["build_feature", "verify_invariant"],
+      "ablation_tester": ["ablate_feature"]
+    },
+    "graph": {
+      "edges": [
+        { "subject": "builder", "rel": "HAS_CAPABILITY", "object": "build_feature" },
+        { "subject": "builder", "rel": "HAS_CAPABILITY", "object": "verify_invariant" },
+        { "subject": "ablation_tester", "rel": "HAS_CAPABILITY", "object": "ablate_feature" }
+      ],
+      "definitions": {}
+    }
+  },
+
+  "actions": {
+    "build_rooms": {
+      "duration": "PT8H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/rooms", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 8.0}" }
+      ]
+    },
+    "build_exits": {
+      "duration": "PT4H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/exits", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 4.0}" }
+      ]
+    },
+    "build_items": {
+      "duration": "PT6H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/items", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 6.0}" }
+      ]
+    },
+    "build_npcs": {
+      "duration": "PT8H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/npcs", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 8.0}" }
+      ]
+    },
+    "build_dialogue": {
+      "duration": "PT12H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/dialogue", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 12.0}" }
+      ]
+    },
+    "build_trust": {
+      "duration": "PT8H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/trust", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 8.0}" }
+      ]
+    },
+    "build_factions": {
+      "duration": "PT6H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/factions", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 6.0}" }
+      ]
+    },
+    "build_secret_identity": {
+      "duration": "PT10H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/secret_identity", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 10.0}" }
+      ]
+    },
+    "build_scoring": {
+      "duration": "PT4H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/scoring", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 4.0}" }
+      ]
+    },
+    "build_persistence": {
+      "duration": "PT6H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/persistence", "value": "built" },
+        { "pointer/set": "/persistent/result", "value": true },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 6.0}" }
+      ]
+    },
+    "build_web_ui": {
+      "duration": "PT8H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/web_ui", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 8.0}" }
+      ]
+    },
+    "build_multiplayer": {
+      "duration": "PT16H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/multiplayer", "value": "built" },
+        { "pointer/set": "/multiplayer_ready/result", "value": true },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 16.0}" }
+      ]
+    },
+    "build_llm_judge": {
+      "duration": "PT20H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "build_feature" } },
+        { "pointer/set": "/world_state/llm_judge", "value": "built" },
+        { "pointer/set": "/cost/total", "value": "{cost_total + 20.0}" }
+      ]
+    },
+    "mark_playable": {
+      "duration": "PT1H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "verify_invariant" } },
+        { "pointer/set": "/playable/result", "value": true }
+      ]
+    },
+    "mark_winnable": {
+      "duration": "PT1H",
+      "params": ["agent"],
+      "body": [
+        { "eval": { "type": "rebac/check", "rel": "HAS_CAPABILITY", "subject": "{agent}", "object": "verify_invariant" } },
+        { "pointer/set": "/winnable/result", "value": true }
+      ]
+    }
+  },
+
+  "methods": {
+    "establish_playable_world": {
+      "params": ["agent"],
+      "alternatives": [
+        {
+          "name": "minimal_playable",
+          "subtasks": [
+            ["build_rooms", "{agent}"],
+            ["build_exits", "{agent}"],
+            ["build_npcs", "{agent}"],
+            ["build_dialogue", "{agent}"],
+            ["build_web_ui", "{agent}"],
+            ["mark_playable", "{agent}"]
+          ]
+        },
+        {
+          "name": "playable_with_items",
+          "subtasks": [
+            ["build_rooms", "{agent}"],
+            ["build_exits", "{agent}"],
+            ["build_items", "{agent}"],
+            ["build_npcs", "{agent}"],
+            ["build_dialogue", "{agent}"],
+            ["build_web_ui", "{agent}"],
+            ["mark_playable", "{agent}"]
+          ]
+        }
+      ]
+    },
+    "establish_winnable_game": {
+      "params": ["agent"],
+      "alternatives": [
+        {
+          "name": "winnable_without_scoring",
+          "subtasks": [
+            ["establish_playable_world", "{agent}"],
+            ["build_trust", "{agent}"],
+            ["build_factions", "{agent}"],
+            ["build_secret_identity", "{agent}"],
+            ["mark_winnable", "{agent}"]
+          ]
+        },
+        {
+          "name": "core_game_loop",
+          "subtasks": [
+            ["establish_playable_world", "{agent}"],
+            ["build_trust", "{agent}"],
+            ["build_factions", "{agent}"],
+            ["build_secret_identity", "{agent}"],
+            ["build_scoring", "{agent}"],
+            ["mark_winnable", "{agent}"]
+          ]
+        }
+      ]
+    },
+    "ship_mud_game": {
+      "params": ["agent"],
+      "alternatives": [
+        {
+          "name": "mvp_single_player_ephemeral",
+          "subtasks": [
+            ["establish_winnable_game", "{agent}"]
+          ]
+        },
+        {
+          "name": "mvp_single_player_persistent",
+          "subtasks": [
+            ["establish_winnable_game", "{agent}"],
+            ["build_persistence", "{agent}"]
+          ]
+        },
+        {
+          "name": "full_multiplayer_persistent",
+          "subtasks": [
+            ["establish_winnable_game", "{agent}"],
+            ["build_persistence", "{agent}"],
+            ["build_multiplayer", "{agent}"]
+          ]
+        },
+        {
+          "name": "full_with_llm_judge",
+          "subtasks": [
+            ["establish_winnable_game", "{agent}"],
+            ["build_persistence", "{agent}"],
+            ["build_llm_judge", "{agent}"]
+          ]
+        }
+      ]
+    }
+  },
+
+  "todo_list": [
+    ["ship_mud_game", "builder"]
+  ]
+}
