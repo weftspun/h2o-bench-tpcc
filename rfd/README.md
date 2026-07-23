@@ -14,3 +14,8 @@ Request-for-Discussion documents (format inspired by
 | [0007](0007-h2o-tfb-reuse.md) | h2o TFB reference implementation reuse | accepted |
 | [0008](0008-verification-strategy.md) | Three-layer verification strategy | accepted |
 | [0009](0009-fdb-keyspace-design.md) | TPC-C keyspace design for FDB | discussion |
+| [0010](0010-binary-value-encoding.md) | Binary value encoding for FDB | accepted |
+| [0011](0011-async-fdb-callback-chain.md) | Async FDB callback chain for TPC-C | accepted |
+| [0012](0012-data-loader.md) | TPC-C data loader design | discussion |
+| [0013](0013-benchmark-harness.md) | Benchmark harness endpoint and transaction mix | accepted |
+| [0014](0014-ci-pipeline.md) | CI/CD pipeline design | accepted |
