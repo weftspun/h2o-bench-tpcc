@@ -31,12 +31,11 @@ FoundationDB (libfdb_c, pure C, no JVM)
 Three components (see [RFD 0005](rfd/0005-actor-lite-architecture.md)):
 
 1. **SPSC lock-free ring buffer** — `spsc_ring.c`, no mutexes on hot path
-2. **Worker threads** — bare pthreads, each owns an FDB database handle
-3. **Return path** — `h2o_multithread_send()` back to the H2O event loop
+2. **Worker threads** — bare pthreads, each own an FDB database handle
+3. **Return path** — `h2o_multithread_send_message()` back to the H2O event loop
 
 Verified by CBMC (C invariants), Lean 4 (specification), and
-plausible-witness-dag (TPC-C semantics). See [RFD
-0008](rfd/0008-verification-strategy.md).
+plausible-witness-dag (TPC-C semantics). See [RFD 0008](rfd/0008-verification-strategy.md).
 
 ## Scenarios
 
@@ -44,6 +43,8 @@ plausible-witness-dag (TPC-C semantics). See [RFD
 |-----|----------|-----------|
 | 0001 | tpcc (standard TPC-C) | warehouses (W) |
 | 0002 | zonefabric | zones |
+| 0003 | assetcdn | assets |
+| 0004 | cassie | canvases |
 
 See `rfd/` for exact scaling formulas and architectural decisions.
 
