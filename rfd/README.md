@@ -19,3 +19,4 @@ Request-for-Discussion documents (format inspired by
 | [0012](0012-data-loader.md) | TPC-C data loader design | discussion |
 | [0013](0013-benchmark-harness.md) | Benchmark harness endpoint and transaction mix | accepted |
 | [0014](0014-ci-pipeline.md) | CI/CD pipeline design | accepted |
+| [0015](0015-techempower-benchmark.md) | TechEmpower benchmark implementation | accepted |

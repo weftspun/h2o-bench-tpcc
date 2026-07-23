@@ -24,6 +24,7 @@
 #include "global_data.h"
 #include "thread.h"
 #include "handlers/tpcc_handler_data.h"
+#include "handlers/tfb_handlers.h"
 
 static void usage(const char *prog)
 {
@@ -86,6 +87,8 @@ int main(int argc, char *argv[])
     h2o_hostconf_t *hostconf = h2o_config_register_host(&config.h2o_config, h2o_iovec_init(H2O_STRLIT("*")), port);
 
     request_handler_data_t handler_data = {0};
+    unsigned int tfb_seed = (unsigned int)time(NULL);
+    initialize_tfb_handlers(hostconf, NULL, &tfb_seed);
     initialize_tpcc_handlers(hostconf, NULL, &handler_data);
 
     global_thread_data_t global_data = {

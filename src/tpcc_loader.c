@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #include "tpcc_kv.h"
 
@@ -187,6 +188,43 @@ static void load_customer_and_orders(FDBDatabase *db)
     fprintf(stderr, "  (stub - full implementation pending)\n");
 }
 
+/* ===== TechEmpower World table ===== */
+
+static void load_world_table(FDBDatabase *db)
+{
+    fprintf(stderr, "Loading 10000 World rows...\n");
+    FDBTransaction *tr;
+    check_fdb(fdb_database_create_transaction(db, &tr), "create_transaction");
+
+    for (uint32_t i = 1; i <= 10000; i++) {
+        /* key = "tfb/w/" + 4-byte big-endian id */
+        uint8_t key[16];
+        memcpy(key, "tfb/w/", 6);
+        uint32_t be = htonl(i);
+        memcpy(key + 6, &be, 4);
+
+        /* value = 4-byte big-endian random number (0-9999) */
+        uint32_t rn = htonl((uint32_t)(rand_r(&seed) % 10000));
+
+        fdb_transaction_set(tr, key, 10, (const uint8_t *)&rn, 4);
+
+        if (i % 1000 == 0) {
+            FDBFuture *f = fdb_transaction_commit(tr);
+            check_fdb(fdb_future_block_until_ready(f), "commit world");
+            check_fdb(fdb_future_get_error(f), "commit world error");
+            fdb_future_destroy(f);
+            fdb_transaction_reset(tr);
+        }
+    }
+
+    FDBFuture *f = fdb_transaction_commit(tr);
+    check_fdb(fdb_future_block_until_ready(f), "final commit world");
+    fdb_future_destroy(f);
+    fdb_transaction_destroy(tr);
+    fprintf(stderr, "  done\n");
+}
+
+
 int main(int argc, char *argv[])
 {
     const char *cluster_file = "/etc/foundationdb/fdb.cluster";
@@ -221,6 +259,7 @@ int main(int argc, char *argv[])
     load_warehouse(db);
     load_districts_and_next_o_id(db);
     load_customer_and_orders(db);
+    load_world_table(db);
 
     fprintf(stderr, "TPC-C data load complete.\n");
 
