@@ -20,3 +20,5 @@ Request-for-Discussion documents (format inspired by
 | [0013](0013-benchmark-harness.md) | Benchmark harness endpoint and transaction mix | accepted |
 | [0014](0014-ci-pipeline.md) | CI/CD pipeline design | accepted |
 | [0015](0015-techempower-benchmark.md) | TechEmpower benchmark implementation | accepted |
+| [0016](0016-zstd-compression.md) | zstd compression for FDB values | discussion |
+| [0017](0017-slotmap-entity-storage.md) | slotmap entity storage | discussion |
