@@ -1,10 +1,7 @@
 /*
- * TPC-C handler registration for FDB.
+ * TPC-C handler registration.
  *
- * Each TPC-C procedure is exposed as an HTTP endpoint. The harness
- * endpoint (/tpcc/run) executes a weighted-random transaction mix.
- * Unlike the libpq version, FDB has no prepared statements -- transactions
- * are created per-request via fdb_database_create_transaction.
+ * Wires up all five TPC-C transaction endpoints plus the harness endpoint.
  */
 
 #include <h2o.h>
@@ -17,49 +14,58 @@
 #include "list.h"
 #include "thread.h"
 #include "tpcc_handler_data.h"
+#include "tpcc_harness.h"
+#include "tpcc_new_order.h"
+#include "tpcc_payment.h"
 #include "tpcc_procedures.h"
 
-/* HTTP handler stubs -- full implementation in follow-up commits */
+/* Per-request context for the HTTP handler (carries FDB state + seed) */
+typedef struct {
+    fdb_thread_state_t *fdb_state;
+    unsigned int seed;
+} handler_state_t;
+
+static handler_state_t g_handler_state;
 
 static int tpcc_new_order_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 {
     (void)self;
-    h2o_send_error_501(req, "Not Implemented", "NewOrder handler stub", 0);
+    tpcc_new_order_execute(req, g_handler_state.fdb_state, g_handler_state.seed++);
     return 0;
 }
 
 static int tpcc_payment_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 {
     (void)self;
-    h2o_send_error_501(req, "Not Implemented", "Payment handler stub", 0);
+    tpcc_payment_execute(req, g_handler_state.fdb_state, g_handler_state.seed++);
     return 0;
 }
 
 static int tpcc_order_status_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 {
     (void)self;
-    h2o_send_error_501(req, "Not Implemented", "OrderStatus handler stub", 0);
+    tpcc_order_status_execute(req, g_handler_state.fdb_state, g_handler_state.seed++);
     return 0;
 }
 
 static int tpcc_delivery_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 {
     (void)self;
-    h2o_send_error_501(req, "Not Implemented", "Delivery handler stub", 0);
+    tpcc_delivery_execute(req, g_handler_state.fdb_state, g_handler_state.seed++);
     return 0;
 }
 
 static int tpcc_stock_level_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 {
     (void)self;
-    h2o_send_error_501(req, "Not Implemented", "StockLevel handler stub", 0);
+    tpcc_stock_level_execute(req, g_handler_state.fdb_state, g_handler_state.seed++);
     return 0;
 }
 
 static int tpcc_harness_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 {
     (void)self;
-    h2o_send_error_501(req, "Not Implemented", "Harness handler stub", 0);
+    tpcc_harness_dispatch(req, g_handler_state.fdb_state, g_handler_state.seed++);
     return 0;
 }
 
@@ -70,7 +76,6 @@ void cleanup_tpcc_handler_thread_data(request_handler_thread_data_t *data)
 
 void cleanup_tpcc_handlers(request_handler_data_t *data)
 {
-    /* FDB has no prepared statements to clean up */
     (void)data;
 }
 
@@ -78,7 +83,6 @@ void initialize_tpcc_handler_thread_data(thread_context_t *ctx,
                                           const request_handler_data_t *data,
                                           request_handler_thread_data_t *thread_data)
 {
-    /* FDB thread state is initialized in initialize_thread_data */
     (void)ctx;
     (void)data;
     (void)thread_data;
@@ -91,7 +95,13 @@ void initialize_tpcc_handlers(h2o_hostconf_t *hostconf,
     (void)log_handle;
     (void)data;
 
-    h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, "/tpcc/new-order", 0);
+    /* TODO: In multi-threaded mode, each thread gets its own handler_state
+     * with its own FDB database handle. For now, single-threaded. */
+    g_handler_state.seed = (unsigned int)time(NULL);
+
+    h2o_pathconf_t *pathconf;
+
+    pathconf = h2o_config_register_path(hostconf, "/tpcc/new-order", 0);
     h2o_handler_register(pathconf, tpcc_new_order_handler);
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/payment", 0);
@@ -109,3 +119,8 @@ void initialize_tpcc_handlers(h2o_hostconf_t *hostconf,
     pathconf = h2o_config_register_path(hostconf, "/tpcc/run", 0);
     h2o_handler_register(pathconf, tpcc_harness_handler);
 }
+
+/* Declarations for the read-only transaction handlers (defined in tpcc_read_txns.c) */
+void tpcc_order_status_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state, unsigned int seed);
+void tpcc_delivery_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state, unsigned int seed);
+void tpcc_stock_level_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state, unsigned int seed);
