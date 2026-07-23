@@ -263,8 +263,8 @@ int main(int argc, char *argv[])
     fprintf(stderr, "TPC-C data load complete.\n");
 
     fdb_database_destroy(db);
-    pthread_join(fdb_thread, NULL);
     check_fdb(fdb_stop_network(), "stop_network");
+    pthread_join(fdb_thread, NULL);
 
     return 0;
 }
