@@ -40,6 +40,6 @@
 
 uint32_t nurand(uint32_t A, uint32_t x, uint32_t y, unsigned int *seed, uint32_t C);
 void send_error(int status_code, const char *error_msg, h2o_req_t *req);
-void send_json_response(const char *json, size_t len, h2o_req_t *req);
+void send_json_str(const char *json, size_t len, h2o_req_t *req);
 
 #endif

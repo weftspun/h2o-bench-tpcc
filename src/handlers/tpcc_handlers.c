@@ -18,6 +18,7 @@
 #include "tpcc_new_order.h"
 #include "tpcc_payment.h"
 #include "tpcc_procedures.h"
+#include "tpcc_read_txns.h"
 
 /* Per-request context for the HTTP handler (carries FDB state + seed) */
 typedef struct {
@@ -102,25 +103,20 @@ void initialize_tpcc_handlers(h2o_hostconf_t *hostconf,
     h2o_pathconf_t *pathconf;
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/new-order", 0);
-    h2o_handler_register(pathconf, tpcc_new_order_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = tpcc_new_order_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/payment", 0);
-    h2o_handler_register(pathconf, tpcc_payment_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = tpcc_payment_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/order-status", 0);
-    h2o_handler_register(pathconf, tpcc_order_status_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = tpcc_order_status_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/delivery", 0);
-    h2o_handler_register(pathconf, tpcc_delivery_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = tpcc_delivery_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/stock-level", 0);
-    h2o_handler_register(pathconf, tpcc_stock_level_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = tpcc_stock_level_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/tpcc/run", 0);
-    h2o_handler_register(pathconf, tpcc_harness_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = tpcc_harness_handler;
 }
-
-/* Declarations for the read-only transaction handlers (defined in tpcc_read_txns.c) */
-void tpcc_order_status_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state, unsigned int seed);
-void tpcc_delivery_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state, unsigned int seed);
-void tpcc_stock_level_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state, unsigned int seed);

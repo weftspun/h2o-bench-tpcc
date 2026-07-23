@@ -13,25 +13,20 @@ typedef struct {
     list_t **tail;
 } queue_t;
 
-static inline void h2o_linklist_init_list(list_t *list)
-{
-    (void)list;
-}
-
-static inline void h2o_linklist_init(queue_t *q)
+static inline void queue_init(queue_t *q)
 {
     q->head = NULL;
     q->tail = &q->head;
 }
 
-static inline void h2o_linklist_push(queue_t *q, list_t *node)
+static inline void queue_push(queue_t *q, list_t *node)
 {
     node->next = NULL;
     *q->tail = node;
     q->tail = &node->next;
 }
 
-static inline list_t *h2o_linklist_pop(queue_t *q)
+static inline list_t *queue_pop(queue_t *q)
 {
     list_t *node = q->head;
     if (node) {
@@ -42,7 +37,7 @@ static inline list_t *h2o_linklist_pop(queue_t *q)
     return node;
 }
 
-static inline bool h2o_linklist_is_empty(queue_t *q)
+static inline bool queue_is_empty(queue_t *q)
 {
     return q->head == NULL;
 }

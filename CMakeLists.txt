@@ -19,7 +19,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 add_compile_definitions(H2O_USE_LIBUV=0)
 
-set(COMMON_OPTIONS -flto=auto -pthread)
+set(COMMON_OPTIONS -flto=auto -pthread -DFDB_API_VERSION=730)
 set(WARNING_OPTIONS -pedantic -Wall -Wextra)
 add_compile_options(${COMMON_OPTIONS} ${WARNING_OPTIONS})
 

@@ -232,7 +232,7 @@ static void finish_payment(payment_ctx_t *ctx, int status, const char *body)
     if (status == 200)
         h2o_send_inline(ctx->req, body, strlen(body));
     else
-        h2o_send_error(ctx->req, status, "Error", body, 0);
+        h2o_send_error_generic(ctx->req, status, "Error", body, 0);
     fdb_transaction_destroy(ctx->tr);
     free(ctx);
 }

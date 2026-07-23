@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <yajl/yajl_gen.h>
 
 #include "utility.h"
 #include "error.h"
@@ -61,7 +62,7 @@ void free_json_generator(json_generator_t *gen, json_generator_t **generators, s
     }
 }
 
-int send_json_response(json_generator_t *gen, bool copy, h2o_req_t *req)
+int send_json_gen(json_generator_t *gen, bool copy, h2o_req_t *req)
 {
     const unsigned char *buf;
     size_t len;

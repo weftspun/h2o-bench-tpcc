@@ -24,7 +24,7 @@ void send_error(int status_code, const char *error_msg, h2o_req_t *req)
     h2o_send_error_503(req, "Service Unavailable", error_msg, 0);
 }
 
-void send_json_response(const char *json, size_t len, h2o_req_t *req)
+void send_json_str(const char *json, size_t len, h2o_req_t *req)
 {
     h2o_iovec_t body = h2o_strdup(&req->pool, json, len);
     h2o_send_inline(req, body.base, body.len);

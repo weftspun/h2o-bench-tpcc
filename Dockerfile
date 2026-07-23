@@ -43,11 +43,12 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 ARG FDB_VERSION=7.3.79
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -qqy libssl3 libyajl2 && \
+    apt-get install --no-install-recommends -qqy libssl3 libyajl2 curl ca-certificates adduser && \
     curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb-client.deb && \
+    dpkg -i /tmp/fdb-client.deb && \
     curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-server_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb-server.deb && \
-    dpkg -i /tmp/fdb-client.deb /tmp/fdb-server.deb && rm /tmp/fdb-*.deb && \
-    rm -rf /var/lib/apt/lists/*
+    dpkg -i /tmp/fdb-server.deb && apt-get install -f -qqy && \
+    rm /tmp/fdb-*.deb && rm -rf /var/lib/apt/lists/*
 
 COPY --from=compile /opt/h2o-bench-tpcc /opt/h2o-bench-tpcc/
 COPY --from=compile /usr/local/bin/wrk /usr/local/bin/wrk

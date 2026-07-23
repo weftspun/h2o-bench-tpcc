@@ -55,7 +55,7 @@ static size_t get_query_number(h2o_req_t *req)
     if (req->query_at < SIZE_MAX) {
         const char *qs = req->path.base + req->query_at + 1;
         size_t qs_len = req->path.len - req->query_at - 1;
-        const char *p = h2o_strstr(qs, qs_len, TFB_QUERIES_PARAMETER, strlen(TFB_QUERIES_PARAMETER));
+        const char *p = get_query_param(qs, qs_len, TFB_QUERIES_PARAMETER, strlen(TFB_QUERIES_PARAMETER));
         if (p) {
             p += strlen(TFB_QUERIES_PARAMETER);
             n = atoi(p);
@@ -436,7 +436,7 @@ static int updates_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
 /* Uses an in-memory cache of the World table. Cache is populated on first
  * access via a range scan of all World keys. */
 
-static uint16_t *g_world_cache = NULL;
+/* World cache is defined above as g_world_cache[10001] */
 static bool g_cache_populating = false;
 
 static int cached_worlds_handler(struct st_h2o_handler_t *self, h2o_req_t *req)
@@ -492,20 +492,20 @@ void initialize_tfb_handlers(h2o_hostconf_t *hostconf,
     h2o_pathconf_t *pathconf;
 
     pathconf = h2o_config_register_path(hostconf, "/plaintext", 0);
-    h2o_handler_register(pathconf, plaintext_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = plaintext_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/json", 0);
-    h2o_handler_register(pathconf, json_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = json_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/db", 0);
-    h2o_handler_register(pathconf, db_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = db_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/queries", 0);
-    h2o_handler_register(pathconf, queries_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = queries_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/updates", 0);
-    h2o_handler_register(pathconf, updates_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = updates_handler;
 
     pathconf = h2o_config_register_path(hostconf, "/cached-worlds", 0);
-    h2o_handler_register(pathconf, cached_worlds_handler);
+    h2o_create_handler(pathconf, sizeof(h2o_handler_t))->on_req = cached_worlds_handler;
 }

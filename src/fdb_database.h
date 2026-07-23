@@ -1,6 +1,8 @@
 #ifndef FDB_DATABASE_H_
 #define FDB_DATABASE_H_
 
+#define FDB_API_VERSION 730
+
 #include <h2o.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -22,7 +24,6 @@
  * FDB API version: 730 (FDB 7.3.x)
  */
 
-#define FDB_API_VERSION 730
 #define FDB_CLUSTER_FILE_DEFAULT "/etc/foundationdb/fdb.cluster"
 #define FDB_DB_ERROR "FDB error"
 #define FDB_DB_TIMEOUT_ERROR "FDB transaction timeout"

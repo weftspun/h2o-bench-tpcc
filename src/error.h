@@ -23,9 +23,6 @@
 
 #define IGNORE_FUNCTION_PARAMETER(x) (void)(x)
 
-#define H2O_STRUCT_FROM_MEMBER(type, member, ptr) \
-    ((type *)((char *)(ptr) - offsetof(type, member)))
-
 #define MKSTR(x) #x
 
 typedef enum { DONE = 1 } result_return_t;

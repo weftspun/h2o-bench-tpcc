@@ -5,7 +5,6 @@
 #include "fdb_database.h"
 #include "global_data.h"
 #include "thread.h"
-#include "list.h"
 
 static fdb_global_t fdb_global;
 
@@ -20,8 +19,7 @@ void initialize_thread_data(global_thread_data_t *global_data, thread_context_t 
     memset(ctx, 0, sizeof(*ctx));
     ctx->global_thread_data = global_data;
     ctx->random_seed = (unsigned int)(uintptr_t)ctx;
-    h2o_linklist_init_list(&ctx->local_messages);
-    h2o_context_init(&ctx->h2o_ctx, &global_data->config->h2o_config, h2o_evloop_create());
+    h2o_context_init(&ctx->h2o_ctx, h2o_evloop_create(), &global_data->config->h2o_config);
     ctx->loop = ctx->h2o_ctx.loop;
 
     fdb_thread_init(&fdb_global, ctx->loop, &ctx->request_handler_data.fdb_state);

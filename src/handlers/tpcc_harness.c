@@ -13,6 +13,7 @@
 #include "tpcc_new_order.h"
 #include "tpcc_payment.h"
 #include "tpcc_procedures.h"
+#include "tpcc_read_txns.h"
 #include "utility.h"
 
 void tpcc_harness_dispatch(h2o_req_t *req, fdb_thread_state_t *fdb_state,

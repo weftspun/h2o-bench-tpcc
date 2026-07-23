@@ -4,6 +4,7 @@
 #include <h2o.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <yajl/yajl_gen.h>
 
 #include "global_data.h"
 
@@ -18,7 +19,7 @@ typedef struct {
 
 json_generator_t *get_json_generator(json_generator_t **generators, size_t *count);
 void free_json_generator(json_generator_t *gen, json_generator_t **generators, size_t *count, size_t max);
-int send_json_response(json_generator_t *gen, bool copy, h2o_req_t *req);
+int send_json_gen(json_generator_t *gen, bool copy, h2o_req_t *req);
 const char *get_query_param(const char *query, size_t query_len, const char *name, size_t name_len);
 
 #endif

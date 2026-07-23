@@ -17,7 +17,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>\n#include <sched.h>
+#include <string.h>
+#include <sched.h>
 
 #include "error.h"
 
@@ -37,9 +38,9 @@ static void on_return_message(h2o_multithread_receiver_t *receiver,
         return_message_t *msg = (return_message_t *)
             h2o_linklist_pop(messages);
         if (msg->status_code == 200)
-            h2o_send_inline(msg->req, msg->body, msg->body_len);
+            h2o_send_inline(msg->req, msg->body, (size_t)msg->body_len);
         else
-            h2o_send_error(msg->req, msg->status_code,
+            h2o_send_error_generic(msg->req, msg->status_code,
                           "Error", msg->body, 0);
         free(msg);
     }
@@ -137,5 +138,5 @@ void worker_pool_process_returns(worker_pool_t *pool)
 {
     /* Process return messages from all workers */
     for (size_t i = 0; i < pool->num_workers; i++)
-        h2o_multithread_send(&pool->workers[i].receiver, NULL);
+        h2o_multithread_send_message(&pool->workers[i].receiver, NULL);
 }

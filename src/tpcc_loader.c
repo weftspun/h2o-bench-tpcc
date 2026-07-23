@@ -21,16 +21,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <foundationdb/fdb_c.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <arpa/inet.h>
 
-#include "tpcc_kv.h"
-
 #define FDB_API_VERSION 730
+#include <foundationdb/fdb_c.h>
+
+#include "tpcc_kv.h"
+#include "handlers/tpcc_procedures.h"
+
 #define BATCH_SIZE 1000
 
 static int W = 1;
@@ -241,14 +243,8 @@ int main(int argc, char *argv[])
     check_fdb(fdb_select_api_version_impl(FDB_API_VERSION, FDB_API_VERSION), "select_api_version");
     check_fdb(fdb_setup_network(), "setup_network");
 
-    /* Get database */
-    FDBFuture *cluster_future = fdb_create_cluster(cluster_file);
-    check_fdb(fdb_future_block_until_ready(cluster_future), "cluster ready");
-    FDBCluster *cluster;
-    check_fdb(fdb_future_get_cluster(cluster_future, &cluster), "get_cluster");
-    fdb_future_destroy(cluster_future);
-
-    FDBFuture *db_future = fdb_cluster_create_database(cluster, "DB");
+    /* FDB API 730: use fdb_create_database directly */
+    FDBFuture *db_future = fdb_create_database(cluster_file);
     check_fdb(fdb_future_block_until_ready(db_future), "db ready");
     FDBDatabase *db;
     check_fdb(fdb_future_get_database(db_future, &db), "get_database");

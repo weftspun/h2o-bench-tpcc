@@ -1,23 +1,11 @@
 /*
  * Async FDB database adapter implementation.
  *
- * SPDX-License-Identifier: Apache-2.0
- *
  * FDB futures are callback-based: fdb_future_set_callback() invokes
- * a user callback when the future is ready. We use this to chain
- * transaction steps without blocking.
- *
- * The callback model maps naturally to h2o's event loop:
- *   1. Worker thread creates FDBTransaction
- *   2. Submits reads (async, callback-driven)
- *   3. Reads complete -> perform writes (sync, in-transaction)
- *   4. Commits (async, callback)
- *   5. Commit completes -> send HTTP response via h2o_multithread_send
- *
- * On conflict (retryable error), fdb_transaction_on_error() returns
- * a future; when it resolves, the transaction is reset and the
- * caller retries the entire transaction from step 2.
+ * a user callback when the future is ready.
  */
+
+#define FDB_API_VERSION 730
 
 #include "fdb_database.h"
 
@@ -56,35 +44,14 @@ int fdb_thread_init(fdb_global_t *fdb, h2o_loop_t *loop, fdb_thread_state_t *sta
     memset(state, 0, sizeof(*state));
     state->loop = loop;
 
-    FDBFuture *cluster_future = fdb_create_cluster(fdb->cluster_file);
-    if (!cluster_future) {
-        ERROR("fdb_create_cluster failed");
-        return -1;
-    }
-
-    fdb_error_t err = fdb_future_block_until_ready(cluster_future);
-    if (err) {
-        LIBRARY_ERROR("fdb_future_block_until_ready", fdb_get_error(err));
-        fdb_future_destroy(cluster_future);
-        return err;
-    }
-
-    FDBCluster *cluster;
-    err = fdb_future_get_cluster(cluster_future, &cluster);
-    if (err) {
-        LIBRARY_ERROR("fdb_future_get_cluster", fdb_get_error(err));
-        fdb_future_destroy(cluster_future);
-        return err;
-    }
-    fdb_future_destroy(cluster_future);
-
-    FDBFuture *db_future = fdb_cluster_create_database(cluster, "DB");
+    /* FDB API 730: use fdb_create_database directly (no cluster API) */
+    FDBFuture *db_future = fdb_create_database(fdb->cluster_file);
     if (!db_future) {
-        ERROR("fdb_cluster_create_database failed");
+        ERROR("fdb_create_database failed");
         return -1;
     }
 
-    err = fdb_future_block_until_ready(db_future);
+    fdb_error_t err = fdb_future_block_until_ready(db_future);
     if (err) {
         LIBRARY_ERROR("fdb_future_block_until_ready", fdb_get_error(err));
         fdb_future_destroy(db_future);
@@ -157,7 +124,7 @@ int fdb_async_get(fdb_thread_state_t *state, FDBTransaction *tr,
                   void (*cb)(FDBFuture *, void *), void *ctx)
 {
     (void)state;
-    FDBFuture *future = fdb_transaction_get(tr, key, key_len, 0 /* snapshot */);
+    FDBFuture *future = fdb_transaction_get(tr, key, key_len);
     if (!future) {
         ERROR("fdb_transaction_get failed");
         return -1;
@@ -179,9 +146,9 @@ int fdb_async_get_range(fdb_thread_state_t *state, FDBTransaction *tr,
 {
     (void)state;
     FDBFuture *future = fdb_transaction_get_range(tr,
-        begin, begin_len, end, end_len,
-        0 /* snapshot */, 0 /* reverse */, 0 /* limit */,
-        FDB_STREAMING_MODE_WANT_ALL, NULL, 0);
+        begin, begin_len, 0, 0,
+        end, end_len, 0, 0,
+        0, 0, FDB_STREAMING_MODE_WANT_ALL, NULL, 0, 0);
     if (!future) {
         ERROR("fdb_transaction_get_range failed");
         return -1;

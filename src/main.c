@@ -77,8 +77,6 @@ int main(int argc, char *argv[])
     }
 
     h2o_config_init(&config.h2o_config);
-    config.h2o_config.http3.enabled = 1;
-    config.h2o_config.http3.max_concurrent_streams = 256;
     h2o_hostconf_t *hostconf = h2o_config_register_host(&config.h2o_config, h2o_iovec_init(H2O_STRLIT("*")), port);
 
     request_handler_data_t handler_data = {0};

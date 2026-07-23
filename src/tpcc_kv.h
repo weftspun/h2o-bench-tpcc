@@ -1,6 +1,8 @@
 #ifndef TPCC_KV_H_
 #define TPCC_KV_H_
 
+#define FDB_API_VERSION 730
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

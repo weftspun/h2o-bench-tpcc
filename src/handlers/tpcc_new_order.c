@@ -276,7 +276,7 @@ static void finish_new_order(new_order_ctx_t *ctx, int status, const char *body)
     if (status == 200) {
         h2o_send_inline(ctx->req, body, strlen(body));
     } else {
-        h2o_send_error(ctx->req, status, "Error", body, 0);
+        h2o_send_error_generic(ctx->req, status, "Error", body, 0);
     }
     fdb_transaction_destroy(ctx->tr);
     free(ctx);
@@ -298,23 +298,23 @@ void tpcc_new_order_execute(h2o_req_t *req, fdb_thread_state_t *fdb_state,
     ctx->seed = seed;
 
     /* Generate TPC-C parameters */
-    ctx->w_id = 1 + get_random_number(0, seed); /* warehouse 1..W */
-    ctx->d_id = 1 + get_random_number(DISTRICTS_PER_WAREHOUSE - 1, seed);
-    ctx->c_id = nurand_customer(seed);
-    ctx->ol_cnt = MIN_ORDER_LINES + get_random_number(MAX_ORDER_LINES - MIN_ORDER_LINES, seed);
+    ctx->w_id = 1 + get_random_number(0, &seed); /* warehouse 1..W */
+    ctx->d_id = 1 + get_random_number(DISTRICTS_PER_WAREHOUSE - 1, &seed);
+    ctx->c_id = nurand_customer(&seed);
+    ctx->ol_cnt = MIN_ORDER_LINES + get_random_number(MAX_ORDER_LINES - MIN_ORDER_LINES, &seed);
 
     ctx->all_local = true;
     for (uint8_t i = 0; i < ctx->ol_cnt; i++) {
-        ctx->ol_i_id[i] = nurand_item(seed);
+        ctx->ol_i_id[i] = nurand_item(&seed);
         /* 1% chance of remote order (supply from different warehouse) */
-        if (get_random_number(99, seed) == 0) {
-            ctx->ol_supply_w[i] = 1 + get_random_number(0, seed);
+        if (get_random_number(99, &seed) == 0) {
+            ctx->ol_supply_w[i] = 1 + get_random_number(0, &seed);
             if (ctx->ol_supply_w[i] != ctx->w_id)
                 ctx->all_local = false;
         } else {
             ctx->ol_supply_w[i] = ctx->w_id;
         }
-        ctx->ol_quantity[i] = 1 + get_random_number(9, seed);
+        ctx->ol_quantity[i] = 1 + get_random_number(9, &seed);
     }
 
     /* Create FDB transaction */
